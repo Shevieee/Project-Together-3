@@ -25,3 +25,18 @@ session = Session()
 
 TOKEN = '5151364048:AAHzaKEVC_tKAB_78icRi68h0NKqq-ysu9U'
 bot = telebot.TeleBot(TOKEN)
+
+
+class States:
+    CLASS_INPUT = 1
+    ATTENDANCE_INPUT = 2
+    SICKNESS_INPUT = 3
+    COLD_INPUT = 4
+    OTHER_REASON_INPUT = 5
+    TOTAL_STUDENTS_INPUT = 6
+
+
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    bot.send_message(message.chat.id,
+                     "Привет! Я бот для сбора данных. Давай начнем. Введи номер класса и букву (например, 10г):")
