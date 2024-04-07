@@ -39,7 +39,7 @@ class States:
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.send_message(message.chat.id,
-                     "Привет! Я бот для сбора данных. Давай начнем. Введи номер класса и букву (например, 10г):")
+                     "Привет! Я бот для сбора данных. Давай начнем. Введите номер класса и букву (например, 10г):")
     bot.register_next_step_handler(message, handle_class_input)
 
 
@@ -47,7 +47,7 @@ def handle_class_input(message):
     try:
         class_info = message.text
 
-        bot.send_message(message.chat.id, f"Теперь введи количество присутствующих в {class_info} классе:")
+        bot.send_message(message.chat.id, f"Теперь введите количество присутствующих в {class_info} классе:")
         bot.register_next_step_handler(message, handle_attendance_input, class_info)
 
     except Exception as e:
@@ -58,7 +58,7 @@ def handle_attendance_input(message, class_info):
     try:
         attendance = int(message.text)
 
-        bot.send_message(message.chat.id, f"Теперь введи количество отсутствующих по болезни в {class_info} классе:")
+        bot.send_message(message.chat.id, f"Теперь введите количество отсутствующих по болезни в {class_info} классе:")
         bot.register_next_step_handler(message, handle_sickness_input, class_info, attendance)
 
     except ValueError:
@@ -70,7 +70,7 @@ def handle_sickness_input(message, class_info, attendance):
         sickness = int(message.text)
 
         bot.send_message(message.chat.id,
-                         f"Теперь введи количество отсутствующих в том числе по ОРВИ в {class_info} классе:")
+                         f"Теперь введите количество отсутствующих в том числе по ОРВИ в {class_info} классе:")
         bot.register_next_step_handler(message, handle_cold_input, class_info, attendance, sickness)
 
     except ValueError:
@@ -93,7 +93,7 @@ def handle_other_reason_input(message, class_info, attendance, sickness, cold):
     try:
         other_reason = int(message.text)
 
-        bot.send_message(message.chat.id, f"Теперь введи общее количество учащихся в {class_info} классе:")
+        bot.send_message(message.chat.id, f"Теперь введите общее количество учащихся в {class_info} классе:")
         bot.register_next_step_handler(message, handle_total_students_input, class_info, attendance, sickness, cold,
                                        other_reason)
 
