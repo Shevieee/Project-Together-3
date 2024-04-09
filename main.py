@@ -1,3 +1,5 @@
+import threading
+
 import telebot
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -99,3 +101,18 @@ def handle_other_reason_input(message, class_info, attendance, sickness, cold):
 
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+
+
+def handle_total_students_input(message, class_info, attendance, sickness, cold, other_reason):
+    try:
+        total_students = int(message.text)
+
+        bot.send_message(message.chat.id, "Данные успешно добавлены в базу данных!")
+
+    except ValueError:
+        bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+
+
+bot_thread = threading.Thread(target=bot.polling)
+bot_thread.start()
+bot_thread.join()
