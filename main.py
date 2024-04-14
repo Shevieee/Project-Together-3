@@ -1,5 +1,4 @@
 import threading
-
 import telebot
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -21,10 +20,8 @@ class Attendance(Base):
 
 engine = create_engine('sqlite:///attendance.db')
 Base.metadata.create_all(bind=engine)
-
 Session = sessionmaker(bind=engine)
 session = Session()
-
 TOKEN = '5151364048:AAHzaKEVC_tKAB_78icRi68h0NKqq-ysu9U'
 bot = telebot.TeleBot(TOKEN)
 
@@ -106,11 +103,32 @@ def handle_other_reason_input(message, class_info, attendance, sickness, cold):
 def handle_total_students_input(message, class_info, attendance, sickness, cold, other_reason):
     try:
         total_students = int(message.text)
-
+        save_data_to_database(class_info, attendance, sickness, cold, other_reason, total_students)
         bot.send_message(message.chat.id, "Данные успешно добавлены в базу данных!")
 
     except ValueError:
         bot.send_message(message.chat.id, "Пожалуйста, введите число.")
+
+
+def save_data_to_database(class_info, attendance, sickness, cold, other_reason, total_students):
+    try:
+        existing_class_row = session.query(Attendance).filter_by(class_info=class_info).first()
+
+        if existing_class_row:
+            existing_class_row.attendance = attendance
+            existing_class_row.sickness = sickness
+            existing_class_row.cold = cold
+            existing_class_row.other_reason = other_reason
+            existing_class_row.total_students = total_students
+        else:
+            new_data = Attendance(class_info=class_info, attendance=attendance, sickness=sickness,
+                                      cold=cold, other_reason=other_reason, total_students=total_students)
+            session.add(new_data)
+
+        session.commit()
+
+    except Exception as e:
+        pass
 
 
 bot_thread = threading.Thread(target=bot.polling)
