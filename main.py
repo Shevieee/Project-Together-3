@@ -1,7 +1,12 @@
-import threading
 import telebot
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
+import threading
+import pandas as pd
+import schedule
+import time
+from datetime import datetime
+import openpyxl
 
 Base = declarative_base()
 
@@ -57,7 +62,8 @@ def handle_attendance_input(message, class_info):
     try:
         attendance = int(message.text)
 
-        bot.send_message(message.chat.id, f"Теперь введите количество отсутствующих по болезни в {class_info} классе:")
+        bot.send_message(message.chat.id, f"Теперь введите количество отсутствующих"
+                                          f" по болезни в {class_info} классе:")
         bot.register_next_step_handler(message, handle_sickness_input, class_info, attendance)
 
     except ValueError:
@@ -93,7 +99,8 @@ def handle_other_reason_input(message, class_info, attendance, sickness, cold):
         other_reason = int(message.text)
 
         bot.send_message(message.chat.id, f"Теперь введите общее количество учащихся в {class_info} классе:")
-        bot.register_next_step_handler(message, handle_total_students_input, class_info, attendance, sickness, cold,
+        bot.register_next_step_handler(message, handle_total_students_input,
+                                       class_info, attendance, sickness, cold,
                                        other_reason)
 
     except ValueError:
@@ -122,15 +129,60 @@ def save_data_to_database(class_info, attendance, sickness, cold, other_reason, 
             existing_class_row.total_students = total_students
         else:
             new_data = Attendance(class_info=class_info, attendance=attendance, sickness=sickness,
-                                      cold=cold, other_reason=other_reason, total_students=total_students)
+                                  cold=cold, other_reason=other_reason, total_students=total_students)
             session.add(new_data)
 
         session.commit()
 
     except Exception as e:
-        pass
+        print(e)
+
+
+def save_data_to_excel_periodically():
+    try:
+        data = session.query(Attendance).all()
+        df = pd.DataFrame(
+            [(item.class_info, item.attendance, item.sickness, item.cold, item.other_reason, item.total_students) for
+             item in data],
+            columns=['Класс', 'Кол-во присутствующих', 'Кол-во отсутствующих по болезни', 'В том числе по ОРВИ',
+                     'Кол-во отсутствующие по иным причинам', 'Всего учащихся'])
+
+        file_name = f'Отчёт за {datetime.now().strftime("%d-%m-%Y")}.xlsx'
+        df.to_excel(file_name, index=False)
+
+    except Exception as e:
+        print(e)
+
+
+def clear_data_periodically():
+    try:
+        session.query(Attendance).filter(Attendance.id > 0).update({Attendance.attendance: None,
+                                                                    Attendance.sickness: None,
+                                                                    Attendance.cold: None,
+                                                                    Attendance.other_reason: None,
+                                                                    Attendance.total_students: None},
+                                                                   synchronize_session=False)
+        session.commit()
+    except Exception as e:
+        print(e)
+
+
+def clear_and_save_periodically():
+    try:
+        schedule.every().day.at("23:50").do(save_data_to_excel_periodically)
+        schedule.every().day.at("23:55").do(clear_data_periodically)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    except Exception as e:
+        print(e)
 
 
 bot_thread = threading.Thread(target=bot.polling)
 bot_thread.start()
+clear_and_save_thread = threading.Thread(target=clear_and_save_periodically)
+clear_and_save_thread.start()
 bot_thread.join()
+clear_and_save_thread.join()
