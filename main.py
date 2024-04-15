@@ -1,7 +1,11 @@
-import threading
 import telebot
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
+import threading
+import pandas as pd
+import schedule
+import time
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -122,10 +126,38 @@ def save_data_to_database(class_info, attendance, sickness, cold, other_reason, 
             existing_class_row.total_students = total_students
         else:
             new_data = Attendance(class_info=class_info, attendance=attendance, sickness=sickness,
-                                      cold=cold, other_reason=other_reason, total_students=total_students)
+                                  cold=cold, other_reason=other_reason, total_students=total_students)
             session.add(new_data)
 
         session.commit()
+
+    except Exception as e:
+        pass
+
+
+def save_data_to_excel_periodically():
+    try:
+        data = session.query(Attendance).all()
+        df = pd.DataFrame(
+            [(item.class_info, item.attendance, item.sickness, item.cold, item.other_reason, item.total_students) for
+             item in data],
+            columns=["Класс", "Кол-во присутствующих", "Кол-во отсутствующих по болезни", "В том числе по ОРВИ",
+                     "Кол-во отсутствующих по иным причинам", "Всего учащихся"])
+
+        file_name = f'Отчёт за {datetime.now().strftime("%d-%m-%Y")}.xlsx'
+        df.to_excel(file_name, index=False)
+
+    except Exception as e:
+        pass
+
+
+def clear_and_save_periodically():
+    try:
+        schedule.every().day.at("23:59").do(save_data_to_excel_periodically)
+
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
     except Exception as e:
         pass
