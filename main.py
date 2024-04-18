@@ -31,15 +31,6 @@ TOKEN = '5151364048:AAHzaKEVC_tKAB_78icRi68h0NKqq-ysu9U'
 bot = telebot.TeleBot(TOKEN)
 
 
-class States:
-    CLASS_INPUT = 1
-    ATTENDANCE_INPUT = 2
-    SICKNESS_INPUT = 3
-    COLD_INPUT = 4
-    OTHER_REASON_INPUT = 5
-    TOTAL_STUDENTS_INPUT = 6
-
-
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.send_message(message.chat.id,
@@ -155,8 +146,8 @@ def clear_data_periodically():
 
 def clear_and_save_periodically():
     try:
-        schedule.every().day.at("23:50").do(save_data_to_excel_periodically)
-        schedule.every().day.at("23:55").do(clear_data_periodically)
+        schedule.every().day.at("17:00").do(save_data_to_excel_periodically)
+        schedule.every().day.at("17:02").do(clear_data_periodically)
 
         while True:
             schedule.run_pending()
