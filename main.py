@@ -146,8 +146,8 @@ def clear_data_periodically():
 
 def clear_and_save_periodically():
     try:
-        schedule.every().day.at("17:00").do(save_data_to_excel_periodically)
-        schedule.every().day.at("17:02").do(clear_data_periodically)
+        schedule.every().day.at("20:35").do(save_data_to_excel_periodically)
+        schedule.every().day.at("23:37").do(clear_data_periodically)
 
         while True:
             schedule.run_pending()
